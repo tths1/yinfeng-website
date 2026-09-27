@@ -34,4 +34,6 @@ python3 -m http.server 8000
 
 ## 在线演示
 
-GitHub Pages：https://github.com/ 用户名 / 仓库名 /pages 形式的地址（见仓库 Settings → Pages）
+https://tths1.github.io/yinfeng-website/
+
+> 说明：本站为纯静态部署，"分享发现"提交与后台同步依赖部署平台的云函数，在 GitHub Pages 演示环境下自动降级；词集展示、空耳制造器、今日谐音等核心功能均可正常体验。
