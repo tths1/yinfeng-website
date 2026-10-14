@@ -5,8 +5,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>音逢｜中日谐音文化小志</title>
   <meta name="description" content="在声音里遇见另一种语言：收集中日之间有趣的谐音、音读与文化回声。">
+  <link rel="canonical" href="https://otowai-sound-encounters.netlify.app/">
+  <meta name="theme-color" content="#f4edde">
+  <meta property="og:type" content="website">
   <meta property="og:title" content="音逢｜中日谐音文化小志">
   <meta property="og:description" content="在声音里，遇见另一种语言。">
+  <meta property="og:url" content="https://otowai-sound-encounters.netlify.app/">
+  <meta property="og:image" content="https://otowai-sound-encounters.netlify.app/og.png">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="favicon.svg">
   <link rel="stylesheet" href="style.css">
   <script>
@@ -43,7 +49,7 @@
           <div class="kana"><small>假名拟音</small><h3 id="daily-kana">ふーふん たお はりん</h3><p id="daily-romaji">fu fun tao ha rin</p></div>
         </div>
         <div class="card-footer">
-          <div><small>声音相似度</small><strong id="daily-score">92<sup>%</sup></strong></div>
+          <div><small>编者音感评分</small><strong id="daily-score">92<sup>/100</sup></strong></div>
           <button class="sound-button speak" data-kana="ふーふん たお はりん"><span>▶</span> 听听声音</button>
         </div>
         <span class="seal" aria-hidden="true">偶<br>然</span>
@@ -100,7 +106,10 @@
                 <h3>映射规则编辑</h3>
                 <p>在这里改规则，下面生成器会立刻按你填的内容生成；修改会自动保存到浏览器。</p>
               </div>
-              <button type="button" id="maker-reset-mappings">恢复默认</button>
+              <div class="maker-config-actions">
+                <button type="button" id="maker-clean-mappings">清理重复数据</button>
+                <button type="button" id="maker-reset-mappings">恢复默认</button>
+              </div>
             </div>
             <label class="maker-mapping-search" for="maker-mapping-search">
               <span>搜索已有字词对应的假名</span>

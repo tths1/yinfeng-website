@@ -771,6 +771,30 @@ function parseJsonArray(raw) {
   return [];
 }
 
+function normalizeChars(value) {
+  return [...new Set(
+    String(value || "")
+      .split(/[,，]/)
+      .map((item) => item.trim())
+      .filter(Boolean),
+  )];
+}
+
+function mergeNotes(...values) {
+  const notes = [];
+  const seen = new Set();
+  values
+    .flatMap((value) => String(value || "").split(/;\s*/))
+    .map((note) => note.trim())
+    .filter(Boolean)
+    .forEach((note) => {
+      if (seen.has(note)) return;
+      seen.add(note);
+      notes.push(note);
+    });
+  return notes.join("; ");
+}
+
 function mergeHomophoneRows(rows) {
   const map = new Map();
   for (const row of rows) {
@@ -778,28 +802,24 @@ function mergeHomophoneRows(rows) {
     const existing = map.get(key);
     if (!existing) {
       map.set(key, {
-        chars: Array.from(new Set(row.chars)),
+        chars: normalizeChars(row.chars),
         kana: row.kana,
         romaji: row.romaji,
-        note: row.note,
+        note: mergeNotes(row.note),
         source: row.source,
         manual: row.manual === true,
       });
       continue;
     }
 
-    const mergedChars = new Set(existing.chars);
-    row.chars.forEach((char) => mergedChars.add(char));
-    existing.chars = Array.from(mergedChars);
+    existing.chars = normalizeChars([...existing.chars, ...normalizeChars(row.chars)].join(","));
     if (row.manual === true && existing.manual !== true) {
       existing.kana = row.kana;
-      existing.note = row.note;
+      existing.note = mergeNotes(existing.note, row.note);
       existing.source = row.source;
       existing.manual = true;
     }
-    if (row.note && row.note !== existing.note) {
-      existing.note = `${existing.note}; ${row.note}`;
-    }
+    existing.note = mergeNotes(existing.note, row.note);
   }
   return Array.from(map.values());
 }
@@ -809,38 +829,26 @@ function mergeEditablePhoneticRows(rows) {
   for (const row of rows) {
     const kana = (row.kana || "").trim();
     const romaji = (row.romaji || "").trim();
-    const chars = typeof row.chars === "string"
-      ? row.chars.split(/[,，]/).map((item) => item.trim()).filter(Boolean)
-      : [];
+    const chars = normalizeChars(row.chars);
     if (!kana || !romaji) continue;
     const key = romaji.toLowerCase();
     const existing = map.get(key);
     if (!existing) {
       map.set(key, {
         ...row,
-        chars: chars.join(", "),
+        chars: chars.join(","),
+        note: mergeNotes(row.note),
       });
       continue;
     }
-    const mergedChars = new Set(
-      existing.chars
-        .split(/[,，]/)
-        .map((item) => item.trim())
-        .filter(Boolean)
-    );
-    chars.forEach((item) => mergedChars.add(item));
-    existing.chars = Array.from(mergedChars).join(",");
+    existing.chars = normalizeChars([...normalizeChars(existing.chars), ...chars].join(",")).join(",");
     if (row.manual === true && existing.manual !== true) {
       existing.kana = kana;
-      existing.note = row.note;
+      existing.note = mergeNotes(existing.note, row.note);
       existing.source = "custom";
       existing.manual = true;
     }
-    const existingNote = typeof existing.note === "string" ? existing.note.trim() : "";
-    const rowNote = typeof row.note === "string" ? row.note.trim() : "";
-    if (rowNote && rowNote !== existingNote) {
-      existing.note = existingNote ? `${existingNote}; ${rowNote}` : rowNote;
-    }
+    existing.note = mergeNotes(existing.note, row.note);
   }
   return Array.from(map.values());
 }
@@ -1582,7 +1590,17 @@ function bindMappingEditors() {
 
   const addPhonetic = document.querySelector("#add-phonetic-row");
   const addPhrase = document.querySelector("#add-phrase-row");
+  const cleanButton = document.querySelector("#maker-clean-mappings");
   const resetButton = document.querySelector("#maker-reset-mappings");
+  if (cleanButton) {
+    cleanButton.onclick = () => {
+      phoneticRows = mergeEditablePhoneticRows(phoneticRows);
+      normalizeMappings();
+      saveMappings();
+      renderMappingEditors();
+      window.alert("已清理重复字符和重复说明，并保存当前规则。");
+    };
+  }
   if (addPhonetic) {
     addPhonetic.onclick = () => {
       const rowId = `phonetic-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -2129,7 +2147,7 @@ document.querySelector("#random").addEventListener("click", () => {
   document.querySelector("#daily-chinese").textContent = entry.chinese;
   document.querySelector("#daily-kana").textContent = entry.kana;
   document.querySelector("#daily-romaji").textContent = entry.romaji;
-  document.querySelector("#daily-score").innerHTML = `${entry.score}<sup>%</sup>`;
+  document.querySelector("#daily-score").innerHTML = `${entry.score}<sup>/100</sup>`;
   const button = document.querySelector(".featured-card .speak");
   button.dataset.kana = entry.kana;
 });
